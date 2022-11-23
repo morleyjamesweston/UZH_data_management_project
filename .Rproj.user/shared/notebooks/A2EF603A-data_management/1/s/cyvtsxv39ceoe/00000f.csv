@@ -1,11 +1,2 @@
-"0","gemeinde <- read_csv(""gemeinde.csv"")
-"
-"2","[1mRows: [22m[34m2286[39m [1mColumns: [22m[34m23[39m"
-"2","[36m──[39m [1mColumn specification[22m [36m─────────────────────────────────────────────────────────────────────────────[39m
-[1mDelimiter:[22m "",""
-[31mchr[39m   (8): UUID, GRUND_AEND, HERKUNFT, OBJEKTART, REVISION_Q, NAME, ICC, SHN
-[32mdbl[39m  (13): ERSTELL_J, ERSTELL_M, REVISION_J, REVISION_M, HERKUNFT_J, HERKUNFT_M, BEZIRKSNUM, SEE_...
-[34mdate[39m  (2): DATUM_AEND, DATUM_ERST"
-"2","
-[36mℹ[39m Use `spec()` to retrieve the full column specification for this data.
-[36mℹ[39m Specify the column types or set `show_col_types = FALSE` to quiet this message."
+"0","gemeinde <- read_csv(""input_data/gemeinde.csv"")"
+"0","kable(gemeinde)"

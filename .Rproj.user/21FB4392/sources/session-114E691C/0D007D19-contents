@@ -1,29 +1,23 @@
 ---
 title: "R Notebook"
-output: html_notebook
+output:
+  pdf_document: default
+  html_notebook: default
 ---
 
 ```{r}
 library(tidyverse)
 library(DBI)
-library(pxR)
+library(knitr)
 ```
 
-
-https://tierstatistik.identitas.ch/en/cattle-map-commune.html
-```{r}
-cattle_map_commune <- read_delim("cattle-map-commune.csv", 
+```{r message=FALSE}
+cattle_map_commune <- read_delim("input_data/cattle-map-commune.csv", 
     delim = ";", escape_double = FALSE, trim_ws = TRUE)
 ```
 
-```{r}
-gemeinde <- read_csv("gemeinde.csv")
-```
-
-bfs_nummer is the gemeinde #
-
-```{r}
-girl_names <- read.px("px-x-0104050000_102.px") %>% 
-  data.frame()
+```{r message=FALSE}
+gemeinde <- read_csv("input_data/gemeinde.csv")
+kable(gemeinde)
 ```
 

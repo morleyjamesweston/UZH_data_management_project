@@ -1,0 +1,167 @@
+---
+title: "What are the Cowboyest Names in Switzerland?"
+subtitle: "Data Management and Integration Assignment"
+author: "Marius Furter and Morley J Weston"
+date: "2022-11-23"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r message=FALSE}
+library(tidyverse)
+library(DBI)
+library(knitr)
+```
+
+# Create the database
+```{r}
+conn <- dbConnect(RSQLite::SQLite(), "cowboys.db")
+```
+
+# Population by Commune
+
+The data was gathered from the Swiss federal geodata portal at data.geo.admin.ch,
+and converted from an ESRI shapefile into a CSV in QGIS.
+```{r message=FALSE}
+communes <- read_csv("input_data/gemeinde.csv")
+communes <- communes %>% 
+  filter(!is.na(EINWOHNERZ)) %>%
+  select(BFS_NUMMER, EINWOHNERZ, NAME)
+
+communes %>% sample_n(10) %>% kable()
+```
+
+We created a table for the communes with the unique ID as a primary key ...
+```{r}
+dbExecute(conn, "
+  create table if not exists communes (
+    commune_id int primary key,
+    population int,
+    name text
+  )          
+")
+```
+
+```{r}
+for (i in 1:nrow(communes)) {
+  row = communes[i,]
+  dbExecute(conn, "
+            insert into communes (commune_id, population, name)
+            values (?, ?, ?)",
+          params = c(row$BFS_NUMMER, row$EINWOHNERZ, row$NAME))
+}
+```
+
+```{r}
+dbGetQuery(conn, "select * from communes limit 10") %>% kable()
+```
+
+
+
+# Cattle population per commune
+```{r message=FALSE}
+cattle_population <- read_delim("input_data/cattle-map-commune.csv", 
+    delim = ";", escape_double = FALSE, trim_ws = TRUE)
+cattle_population <- cattle_population %>% 
+  select(MunicipalityNumber, count)
+
+cattle_population %>% sample_n(10) %>% kable()
+```
+
+
+
+
+
+
+TODO: 
+1. alter table communes to add a cattle_population column, 
+2. update communes cattle_population where commune_id is equal
+
+www.sqlitetutorial.net is a good resource
+
+
+
+
+# Most common family names by commune
+```{r message=FALSE}
+family_names <-
+  read_delim(
+    "input_data/family-names-commune.csv",
+    delim = ";",
+    escape_double = FALSE,
+    trim_ws = TRUE
+  )
+family_names <- family_names %>% 
+  filter(TIME_PERIOD == 2021) %>% 
+  select(LASTNAME, GDENR, RANG_GDE, VALUE)
+
+family_names %>% sample_n(10) %>% kable()
+```
+
+```{r}
+dbExecute(conn, "
+  create table if not exists family_names (
+    id integer primary key,
+    commune_id int,
+    name_count int,
+    rank int,
+    foreign key(commune_id) references communes(commune_id)
+  )          
+")
+```
+```{r}
+pb = txtProgressBar(min = 1, max = nrow(family_names), initial = 1) 
+
+for (i in 1:nrow(family_names)) {
+  row = family_names[i,]
+  dbExecute(conn, "
+            insert into family_names (commune_id, name_count, rank)
+            values (?, ?, ?)",
+          params = c(row$GDENR, row$VALUE, row$RANG_GDE))
+  
+  if (i %% 1000 == 0) {
+    setTxtProgressBar(pb,i)} 
+}
+
+close(pb)
+```
+```{r}
+dbGetQuery(conn, "select * from family_names limit 10") %>% kable()
+```
+
+# Most common cattle names by commune
+```{r message=FALSE}
+cattle_NamesFemaleCalves <- read_delim("input_data/cattle-NamesFemaleCalves.csv", 
+    delim = ";", escape_double = FALSE, trim_ws = TRUE) %>%
+  mutate(sex="F")
+
+cattle_NamesMaleCalves <- read_delim("input_data/cattle-NamesMaleCalves.csv", 
+    delim = ";", escape_double = FALSE, trim_ws = TRUE) %>% 
+  mutate(sex="M")
+
+cattle_names <- bind_rows(cattle_NamesFemaleCalves, cattle_NamesMaleCalves)
+rm(cattle_NamesFemaleCalves, cattle_NamesMaleCalves)
+
+cattle_names <- cattle_names %>% 
+  filter(year==2022) %>% 
+  filter(OwnerLanguage != "__all__") %>% 
+  select(Name, count, Rank, sex, OwnerLanguage)
+
+cattle_names %>% arrange(Rank, sex, OwnerLanguage) %>% head(10) %>% kable()
+```
+
+
+
+
+
+
+# TODO make table for this
+
+
+
+
+
+
