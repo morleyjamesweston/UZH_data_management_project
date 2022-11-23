@@ -1,2 +1,0 @@
-"0","gemeinde <- read_csv(""input_data/gemeinde.csv"")"
-"0","kable(gemeinde)"

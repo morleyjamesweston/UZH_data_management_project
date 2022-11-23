@@ -96,6 +96,7 @@ family_names <-
   )
 family_names <- family_names %>% 
   filter(TIME_PERIOD == 2021) %>% 
+  filter(RANG_GDE <= 3) %>% 
   select(LASTNAME, GDENR, RANG_GDE, VALUE)
 
 family_names %>% sample_n(10) %>% kable()
@@ -105,6 +106,7 @@ family_names %>% sample_n(10) %>% kable()
 dbExecute(conn, "
   create table if not exists family_names (
     id integer primary key,
+    name text,
     commune_id int,
     name_count int,
     rank int,
@@ -112,22 +114,24 @@ dbExecute(conn, "
   )          
 ")
 ```
+
+
 ```{r}
 pb = txtProgressBar(min = 1, max = nrow(family_names), initial = 1) 
 
 for (i in 1:nrow(family_names)) {
   row = family_names[i,]
   dbExecute(conn, "
-            insert into family_names (commune_id, name_count, rank)
-            values (?, ?, ?)",
-          params = c(row$GDENR, row$VALUE, row$RANG_GDE))
+            insert into family_names (name, commune_id, name_count, rank)
+            values (?, ?, ?, ?)",
+          params = c(row$LASTNAME, row$GDENR, row$VALUE, row$RANG_GDE))
   
-  if (i %% 1000 == 0) {
+  if (i %% 100 == 0) {
     setTxtProgressBar(pb,i)} 
 }
-
 close(pb)
 ```
+
 ```{r}
 dbGetQuery(conn, "select * from family_names limit 10") %>% kable()
 ```
