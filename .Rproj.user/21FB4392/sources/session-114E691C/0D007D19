@@ -3,9 +3,9 @@
     "path": "~/Zurich/data_management_project/data_management.Rmd",
     "project_path": "data_management.Rmd",
     "type": "r_markdown",
-    "hash": "1066219917",
+    "hash": "2452991573",
     "contents": "",
-    "dirty": false,
+    "dirty": true,
     "created": 1669219724689.0,
     "source_on_save": false,
     "relative_order": 1,
@@ -14,15 +14,15 @@
         "chunk_output_type": "inline",
         "source_window_id": "",
         "Source": "Source",
-        "cursorPosition": "12,0",
-        "scrollLine": "0"
+        "cursorPosition": "27,0",
+        "scrollLine": "28"
     },
     "folds": "",
-    "lastKnownWriteTime": 1669219857,
+    "lastKnownWriteTime": 1669224229,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1669219857980,
+    "last_content_update": 1669224229411,
     "read_only": false,
     "read_only_alternatives": []
 }
