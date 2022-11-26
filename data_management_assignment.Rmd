@@ -319,8 +319,131 @@ dbGetQuery(conn, "
              where cattle_per_1k > 3000)
            group by name
            order by name_count desc
-           
-           ") %>% head(n=30) %>% kable()
+           limit 30
+           ") %>% kable()
 ```
 
-We observe that many of the names are french. Queloz is incidentilly the name of physics nobel laureate Didier Queloz whose research concerns the detection of earth-like exoplanets. Perhaps he is in part motivated to find new pastures for raising cattle.
+We observe that many of the names are French. Queloz is incidentally the name of physics nobel laureate Didier Queloz whose research concerns the detection of earth-like exoplanets. Perhaps he is in part motivated to find new pastures for raising cattle.
+
+If we wanted to find the top cattle name, assuming that they take the family names of their 
+masters, we could need the following information: 
+1. The commune with the most cattle per capita per language region:
+
+```{r}
+dbGetQuery(conn,"
+            select
+                commune_id,
+                max(cattle_per_1k),
+                language_region
+            from
+                communes
+            group by
+                language_region
+")
+```
+2. The most common name in that commune
+```{r}
+dbGetQuery(conn,"
+select
+    language_region,
+    family_name
+from
+    (
+        (
+            select
+                commune_id,
+                max(cattle_per_1k),
+                language_region
+            from
+                communes
+            group by
+                language_region
+        ) as top_cattle_communes
+        left join (
+            select
+                name as family_name,
+                commune_id
+            from
+                family_names
+            where
+                rank = 1
+        ) as top_names
+        on top_cattle_communes.commune_id == top_names.commune_id
+    ) where language_region is not null
+") %>% kable()
+```
+3. The top cattle name per sex and language region.
+```{r}
+dbGetQuery(conn,"
+select
+    name as first_name,
+    sex,
+    language_region
+from
+    cattle_names
+where
+    rank == 1
+") %>% kable()
+```
+Sadly, the Bündnerromanisch cattle names are not included in the original dataset, so the names of those *Vacha* will be excluded.
+
+The results can be retrieved as a single SQL query, as shown:
+
+```{r}
+dbGetQuery(conn,"
+select
+    first_name,
+    family_name,
+    sex,
+    top_cowboy_first_names.language_region
+from
+    (
+        select
+            language_region,
+            family_name
+        from
+            (
+                (
+                    select
+                        commune_id,
+                        max(cattle_per_1k),
+                        language_region
+                    from
+                        communes
+                    group by
+                        language_region
+                ) as top_cattle_communes
+  
+                left join (
+                    select
+                        name as family_name,
+                        commune_id
+                    from
+                        family_names
+                    where
+                        rank = 1
+                ) as top_names 
+                on top_cattle_communes.commune_id == top_names.commune_id
+            )
+    ) as top_cowboy_family_names
+    join (
+        select
+            name as first_name,
+            sex,
+            language_region
+        from
+            cattle_names
+        where
+            rank == 1
+    ) as top_cowboy_first_names
+on top_cowboy_family_names.language_region = top_cowboy_first_names.language_region;") %>%
+  kable()
+```
+We can see here that there is a tie for the top cattle family name in German, between Roos and Spänhauer. From this, we can see that these names are perhaps the most iconic cattle names in Switzerland.
+
+
+
+
+
+
+
